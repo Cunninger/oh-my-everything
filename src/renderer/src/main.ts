@@ -1,8 +1,10 @@
 import './search'
 import './results'
 import './syntax-preview'
+import './dialog'
 import './settings-panel'
 import { initTheme } from './settings-panel'
+import { initUpdates, setDisplayedVersion } from './updates'
 
 declare global {
   interface Window {
@@ -21,3 +23,8 @@ document.getElementById('btn-close')?.addEventListener('click', () => {
 
 // Initialize theme
 initTheme()
+initUpdates()
+
+window.api.getDiagnostics()
+  .then((diagnostics) => setDisplayedVersion(diagnostics.info.appVersion))
+  .catch(() => setDisplayedVersion('-'))

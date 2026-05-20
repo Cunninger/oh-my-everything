@@ -1,4 +1,5 @@
 import type { SearchResult } from '../../shared/types'
+import { showErrorDialog } from './dialog'
 
 const syntaxInput = document.getElementById('syntax-input') as HTMLInputElement
 const rerunBtn = document.getElementById('btn-rerun') as HTMLButtonElement
@@ -83,6 +84,7 @@ async function rerunWithSyntax(): Promise<void> {
     statusResults.textContent = `${results.length} 条结果`
   } catch (err: unknown) {
     statusResults.textContent = `搜索失败: ${err instanceof Error ? err.message : String(err)}`
+    showErrorDialog('搜索失败', err)
   } finally {
     rerunBtn.disabled = false
   }

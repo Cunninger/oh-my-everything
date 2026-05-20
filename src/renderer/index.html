@@ -137,9 +137,65 @@
             <option value="dark">暗色</option>
           </select>
         </div>
+        <div class="settings-section">
+          <h3>更新</h3>
+          <div class="setting-group checkbox-row">
+            <label><input type="checkbox" id="set-update-autocheck" /> 启动时自动检查更新</label>
+          </div>
+          <div class="setting-group checkbox-row">
+            <label><input type="checkbox" id="set-update-proxy-enabled" /> 使用 GitHub 下载代理</label>
+          </div>
+          <div class="setting-group">
+            <label>代理模板</label>
+            <input type="text" id="set-update-proxy-template" placeholder="https://gh-proxy.com/{url}" />
+          </div>
+          <div class="setting-group checkbox-row">
+            <label><input type="checkbox" id="set-update-prefer-installer" /> 优先下载安装包</label>
+          </div>
+          <div class="update-panel">
+            <div id="update-current-version">当前版本：-</div>
+            <div id="update-status">尚未检查更新</div>
+            <div id="update-progress" class="hidden">
+              <div class="progress-bar"><div id="update-progress-bar"></div></div>
+              <span id="update-progress-text">0%</span>
+            </div>
+            <div class="inline-row">
+              <button id="btn-check-update" class="btn-small">检查更新</button>
+              <button id="btn-download-update" class="btn-small hidden">下载更新</button>
+              <button id="btn-open-installer" class="btn-small hidden">打开安装包</button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>关于与诊断</h3>
+          <div class="about-grid">
+            <span>应用</span><strong>oh-my-everything</strong>
+            <span>版本</span><strong id="about-version">-</strong>
+          </div>
+          <div class="inline-row">
+            <button id="btn-open-release" class="btn-small">Release 页面</button>
+            <button id="btn-open-logs" class="btn-small">日志目录</button>
+            <button id="btn-copy-diagnostics" class="btn-small">复制诊断</button>
+          </div>
+          <div class="inline-row settings-io-row">
+            <button id="btn-export-settings" class="btn-small">导出设置</button>
+            <button id="btn-import-settings" class="btn-small">导入设置</button>
+          </div>
+        </div>
         <div class="settings-actions">
           <button id="btn-save-settings" class="btn-primary">保存</button>
           <button id="btn-close-settings" class="btn-text">关闭</button>
+        </div>
+      </div>
+    </div>
+    <div id="dialog-overlay" class="hidden">
+      <div id="dialog-panel">
+        <h2 id="dialog-title">提示</h2>
+        <p id="dialog-message"></p>
+        <textarea id="dialog-details" class="hidden" readonly></textarea>
+        <div class="settings-actions">
+          <button id="btn-copy-dialog" class="btn-small hidden">复制详情</button>
+          <button id="btn-close-dialog" class="btn-primary">关闭</button>
         </div>
       </div>
     </div>

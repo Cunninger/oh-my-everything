@@ -1,35 +1,85 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { AppSettings, SearchResult, SearchResponse } from '../shared/types'
+import { IPC_CHANNELS } from '../shared/constants'
+import type {
+  AppSettings,
+  DiagnosticInfo,
+  ExposedAPI,
+  SearchResult,
+  SearchResponse,
+  UpdateCheckResult,
+  UpdateDownloadProgress,
+  UpdateDownloadResult,
+} from '../shared/types'
 
-const api = {
+const api: ExposedAPI = {
   searchTranslate: (query: string): Promise<SearchResponse> =>
-    ipcRenderer.invoke('search:translate', query),
+    ipcRenderer.invoke(IPC_CHANNELS.SEARCH_TRANSLATE, query),
 
   searchRaw: (syntax: string): Promise<SearchResult[]> =>
-    ipcRenderer.invoke('search:raw', syntax),
+    ipcRenderer.invoke(IPC_CHANNELS.SEARCH_RAW, syntax),
 
   getSettings: (): Promise<AppSettings> =>
-    ipcRenderer.invoke('settings:get'),
+    ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET),
 
   setSettings: (settings: AppSettings): Promise<void> =>
-    ipcRenderer.invoke('settings:set', settings),
+    ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET, settings),
+
+  exportSettings: (): Promise<string | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_EXPORT_SETTINGS),
+
+  importSettings: (): Promise<string | null> =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_IMPORT_SETTINGS),
 
   openFile: (path: string): Promise<void> =>
-    ipcRenderer.invoke('app:openFile', path),
+    ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_FILE, path),
 
   openFolder: (path: string): Promise<void> =>
-    ipcRenderer.invoke('app:openFolder', path),
+    ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_FOLDER, path),
+
+  openExternal: (url: string): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_EXTERNAL, url),
+
+  openLogsFolder: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_LOGS_FOLDER),
+
+  getDiagnostics: (): Promise<{ info: DiagnosticInfo, text: string }> =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_GET_DIAGNOSTICS),
+
+  checkForUpdates: (): Promise<UpdateCheckResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.UPDATE_CHECK),
+
+  downloadUpdate: (): Promise<UpdateDownloadResult> =>
+    ipcRenderer.invoke(IPC_CHANNELS.UPDATE_DOWNLOAD),
+
+  openDownloadedInstaller: (filePath?: string): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.UPDATE_OPEN_INSTALLER, filePath),
+
+  onUpdateProgress: (callback: (progress: UpdateDownloadProgress) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, progress: UpdateDownloadProgress): void => callback(progress)
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_PROGRESS, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATE_PROGRESS, listener)
+  },
+
+  onUpdateAvailable: (callback: (update: UpdateCheckResult) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, update: UpdateCheckResult): void => callback(update)
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_AVAILABLE, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATE_AVAILABLE, listener)
+  },
+
+  onUpdateError: (callback: (message: string) => void): (() => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, message: string): void => callback(message)
+    ipcRenderer.on(IPC_CHANNELS.UPDATE_ERROR, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATE_ERROR, listener)
+  },
 
   minimizeWindow: (): Promise<void> =>
-    ipcRenderer.invoke('window:minimize'),
+    ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE),
 
   closeWindow: (): Promise<void> =>
-    ipcRenderer.invoke('window:close'),
+    ipcRenderer.invoke(IPC_CHANNELS.WINDOW_CLOSE),
 
   browseFile: (filters?: { name: string; extensions: string[] }[]): Promise<string | null> =>
-    ipcRenderer.invoke('app:browseFile', filters),
+    ipcRenderer.invoke(IPC_CHANNELS.APP_BROWSE_FILE, filters),
 }
-
-export type ExposedAPI = typeof api
 
 contextBridge.exposeInMainWorld('api', api)

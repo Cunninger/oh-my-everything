@@ -1,4 +1,5 @@
 import type { SearchResponse, SearchResult } from '../../shared/types'
+import { showErrorDialog } from './dialog'
 
 const searchInput = document.getElementById('search-input') as HTMLInputElement
 const searchBtn = document.getElementById('btn-search') as HTMLButtonElement
@@ -61,7 +62,9 @@ export async function doSearch(): Promise<void> {
     statusResults.textContent = `${response.results.length} 条结果 (${(response.executionTimeMs / 1000).toFixed(1)}s)`
   } catch (err: unknown) {
     if (searchId !== latestSearchId) return
-    showError(`搜索失败: ${err instanceof Error ? err.message : String(err)}`)
+    const message = `搜索失败: ${err instanceof Error ? err.message : String(err)}`
+    showError(message)
+    showErrorDialog('搜索失败', err)
   } finally {
     if (searchId === latestSearchId) setLoading(false)
   }

@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
 import type { AppSettings } from '../../shared/types'
 import { DEFAULT_SETTINGS, SEARCH_LIMITS } from '../../shared/constants'
+import { normalizeUpdateSettings } from './update-core'
 
 interface StoredAISettings {
   provider?: unknown
@@ -19,6 +20,7 @@ interface StoredSettings {
   showSyntaxPreview?: unknown
   theme?: unknown
   excludePatterns?: unknown
+  updates?: unknown
 }
 
 function getConfigPath(): string {
@@ -50,14 +52,26 @@ export function getSettings(): AppSettings {
   return readConfig().settings
 }
 
-export function setSettings(settings: AppSettings): void {
+export function setSettings(settings: unknown): void {
   writeConfig({ settings: normalizeSettings(settings) })
 }
 
-function normalizeSettings(settings?: StoredSettings): AppSettings {
-  const ai = settings?.ai || {}
+export function getExportableSettings(): AppSettings {
+  const settings = getSettings()
+  return {
+    ...settings,
+    ai: {
+      ...settings.ai,
+      apiKey: undefined,
+    },
+  }
+}
+
+function normalizeSettings(value?: unknown): AppSettings {
+  const settings = isRecord(value) ? value as StoredSettings : {}
+  const ai = isRecord(settings.ai) ? settings.ai : {}
   const provider = normalizeProvider(ai.provider)
-  const theme = normalizeTheme(settings?.theme)
+  const theme = normalizeTheme(settings.theme)
 
   return {
     ai: {
@@ -73,6 +87,7 @@ function normalizeSettings(settings?: StoredSettings): AppSettings {
       : DEFAULT_SETTINGS.showSyntaxPreview,
     theme,
     excludePatterns: normalizeExcludePatterns(settings?.excludePatterns),
+    updates: normalizeUpdateSettings(settings?.updates),
   }
 }
 
@@ -128,6 +143,10 @@ function normalizeOptionalString(value: unknown): string | undefined {
 
 function normalizeString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function clampNumber(value: unknown, min: number, max: number, fallback: number): number {

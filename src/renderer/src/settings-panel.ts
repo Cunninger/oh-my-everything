@@ -1,6 +1,8 @@
 import type { AppSettings } from '../../shared/types'
 import { DEFAULT_SETTINGS, SEARCH_LIMITS } from '../../shared/constants'
 import { doSearch } from './search'
+import { showDialog, showErrorDialog } from './dialog'
+import { setDisplayedVersion } from './updates'
 
 const settingsOverlay = document.getElementById('settings-overlay')!
 const btnSettings = document.getElementById('btn-settings')!
@@ -15,6 +17,15 @@ const setEspath = document.getElementById('set-espath') as HTMLInputElement
 const setMaxresults = document.getElementById('set-maxresults') as HTMLInputElement
 const setExclude = document.getElementById('set-exclude') as HTMLTextAreaElement
 const setTheme = document.getElementById('set-theme') as HTMLSelectElement
+const setUpdateAutocheck = document.getElementById('set-update-autocheck') as HTMLInputElement
+const setUpdateProxyEnabled = document.getElementById('set-update-proxy-enabled') as HTMLInputElement
+const setUpdateProxyTemplate = document.getElementById('set-update-proxy-template') as HTMLInputElement
+const setUpdatePreferInstaller = document.getElementById('set-update-prefer-installer') as HTMLInputElement
+const btnOpenRelease = document.getElementById('btn-open-release') as HTMLButtonElement
+const btnOpenLogs = document.getElementById('btn-open-logs') as HTMLButtonElement
+const btnCopyDiagnostics = document.getElementById('btn-copy-diagnostics') as HTMLButtonElement
+const btnExportSettings = document.getElementById('btn-export-settings') as HTMLButtonElement
+const btnImportSettings = document.getElementById('btn-import-settings') as HTMLButtonElement
 
 export function initTheme(): void {
   const saved = localStorage.getItem('theme')
@@ -53,12 +64,22 @@ async function loadSettings(): Promise<void> {
     setExclude.value = (settings.excludePatterns || []).join('\n')
     syncExcludeTags()
     setTheme.value = settings.theme
+    setUpdateAutocheck.checked = settings.updates.autoCheckOnStartup
+    setUpdateProxyEnabled.checked = settings.updates.proxyEnabled
+    setUpdateProxyTemplate.value = settings.updates.proxyTemplate
+    setUpdatePreferInstaller.checked = settings.updates.preferInstaller
+    const diagnostics = await window.api.getDiagnostics()
+    setDisplayedVersion(diagnostics.info.appVersion)
   } catch {
     // Use defaults
     setProvider.value = DEFAULT_SETTINGS.ai.provider
     setModel.value = DEFAULT_SETTINGS.ai.model
     setMaxresults.value = String(DEFAULT_SETTINGS.maxResults)
     setTheme.value = DEFAULT_SETTINGS.theme
+    setUpdateAutocheck.checked = DEFAULT_SETTINGS.updates.autoCheckOnStartup
+    setUpdateProxyEnabled.checked = DEFAULT_SETTINGS.updates.proxyEnabled
+    setUpdateProxyTemplate.value = DEFAULT_SETTINGS.updates.proxyTemplate
+    setUpdatePreferInstaller.checked = DEFAULT_SETTINGS.updates.preferInstaller
   }
 }
 
@@ -75,6 +96,12 @@ async function saveSettings(): Promise<void> {
     showSyntaxPreview: true,
     theme: setTheme.value as 'system' | 'light' | 'dark',
     excludePatterns: parseExcludePatterns(setExclude.value),
+    updates: {
+      autoCheckOnStartup: setUpdateAutocheck.checked,
+      proxyEnabled: setUpdateProxyEnabled.checked,
+      proxyTemplate: setUpdateProxyTemplate.value.trim() || DEFAULT_SETTINGS.updates.proxyTemplate,
+      preferInstaller: setUpdatePreferInstaller.checked,
+    },
   }
 
   await window.api.setSettings(settings)
@@ -131,6 +158,45 @@ btnSaveSettings.addEventListener('click', saveSettings)
 document.getElementById('btn-browse-es')?.addEventListener('click', async () => {
   const path = await window.api.browseFile([{ name: '可执行文件', extensions: ['exe'] }])
   if (path) setEspath.value = path
+})
+
+btnOpenRelease.addEventListener('click', () => {
+  window.api.openExternal('https://github.com/Cunninger/oh-my-everything/releases')
+})
+
+btnOpenLogs.addEventListener('click', () => {
+  window.api.openLogsFolder().catch((err) => showErrorDialog('打开日志目录失败', err))
+})
+
+btnCopyDiagnostics.addEventListener('click', async () => {
+  try {
+    const diagnostics = await window.api.getDiagnostics()
+    await navigator.clipboard.writeText(diagnostics.text)
+    showDialog('诊断信息', '诊断信息已复制到剪贴板。', diagnostics.text)
+  } catch (err) {
+    showErrorDialog('复制诊断信息失败', err)
+  }
+})
+
+btnExportSettings.addEventListener('click', async () => {
+  try {
+    const path = await window.api.exportSettings()
+    if (path) showDialog('导出设置', `设置已导出到：\n${path}`)
+  } catch (err) {
+    showErrorDialog('导出设置失败', err)
+  }
+})
+
+btnImportSettings.addEventListener('click', async () => {
+  try {
+    const path = await window.api.importSettings()
+    if (path) {
+      await loadSettings()
+      showDialog('导入设置', `设置已从以下文件导入：\n${path}`)
+    }
+  } catch (err) {
+    showErrorDialog('导入设置失败', err)
+  }
 })
 
 settingsOverlay.addEventListener('click', (e) => {
