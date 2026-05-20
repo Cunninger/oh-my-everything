@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>oh-my-everything</title>
+  <link rel="stylesheet" href="./assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Title bar -->
+    <div id="titlebar">
+      <div class="titlebar-left">
+        <button id="btn-settings" class="titlebar-icon-btn" title="设置">&#x2699;</button>
+        <span class="titlebar-text">oh-my-everything</span>
+      </div>
+      <div class="titlebar-buttons">
+        <button id="btn-minimize" class="titlebar-btn">&#x2014;</button>
+        <button id="btn-close" class="titlebar-btn close">&#x2715;</button>
+      </div>
+    </div>
+
+    <!-- Search area -->
+    <div id="search-area">
+      <div class="search-row">
+        <input type="text" id="search-input" placeholder="输入自然语言搜索，例如：今天修改的所有 PDF 文件" autocomplete="off" />
+        <button id="btn-search" class="btn-primary">搜索</button>
+      </div>
+      <div id="syntax-preview" class="syntax-preview hidden">
+        <label>Everything 语法：</label>
+        <input type="text" id="syntax-input" />
+        <button id="btn-rerun" class="btn-small">重新搜索</button>
+      </div>
+    </div>
+
+    <!-- Results area -->
+    <div id="results-area">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th class="col-name">文件名</th>
+            <th class="col-path">路径</th>
+            <th class="col-size">大小</th>
+            <th class="col-date">修改时间</th>
+          </tr>
+        </thead>
+        <tbody id="results-body"></tbody>
+      </table>
+      <div id="results-empty" class="hidden">
+        <p>无搜索结果</p>
+      </div>
+      <div id="results-loading" class="hidden">
+        <p>搜索中...</p>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div id="statusbar">
+      <span id="status-results"></span>
+      <span id="status-ai"></span>
+    </div>
+
+    <!-- Settings panel -->
+    <div id="settings-overlay" class="hidden">
+      <div id="settings-panel">
+        <h2>设置</h2>
+        <div class="setting-group">
+          <label>AI 提供者</label>
+          <select id="set-provider">
+            <option value="ollama">Ollama (本地)</option>
+            <option value="openai">OpenAI</option>
+            <option value="claude">Claude</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label>API Key</label>
+          <input type="password" id="set-apikey" placeholder="留空则不需要" />
+        </div>
+        <div class="setting-group">
+          <label>Base URL</label>
+          <input type="text" id="set-baseurl" placeholder="默认使用官方地址" />
+        </div>
+        <div class="setting-group">
+          <label>模型</label>
+          <input type="text" id="set-model" />
+        </div>
+        <div class="setting-group">
+          <label>es.exe 路径</label>
+          <div class="inline-row">
+            <input type="text" id="set-espath" placeholder="自动检测或手动指定" />
+            <button id="btn-browse-es" class="btn-small">浏览</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label>最大结果数</label>
+          <input type="number" id="set-maxresults" min="10" max="1000" value="100" />
+        </div>
+        <div class="setting-group">
+          <label>主题</label>
+          <select id="set-theme">
+            <option value="system">跟随系统</option>
+            <option value="light">亮色</option>
+            <option value="dark">暗色</option>
+          </select>
+        </div>
+        <div class="settings-actions">
+          <button id="btn-save-settings" class="btn-primary">保存</button>
+          <button id="btn-close-settings" class="btn-text">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>
