@@ -30,8 +30,6 @@ export class OpenAIProvider implements AIProvider {
       max_tokens: 8192,
     })
 
-    console.log(`[AI] POST ${url}, model=${this.config.model}`)
-
     let response: Response
     try {
       response = await fetch(url, { method: 'POST', headers, body })
@@ -41,7 +39,6 @@ export class OpenAIProvider implements AIProvider {
     }
 
     const rawText = await response.text()
-    console.log(`[AI] status=${response.status}, body=${rawText.slice(0, 500)}`)
 
     if (!response.ok) {
       throw new Error(`API 错误 (${response.status}): ${rawText.slice(0, 300)}`)

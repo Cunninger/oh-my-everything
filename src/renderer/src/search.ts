@@ -10,6 +10,7 @@ const resultsLoading = document.getElementById('results-loading')!
 let currentResults: SearchResult[] = []
 let sortField: 'size' | 'date' | 'type' | null = null
 let sortAsc = true
+let latestSearchId = 0
 
 export function setLoading(loading: boolean): void {
   resultsLoading.classList.toggle('hidden', !loading)
@@ -33,6 +34,7 @@ export async function doSearch(): Promise<void> {
   const query = searchInput.value.trim()
   if (!query) return
 
+  const searchId = ++latestSearchId
   setLoading(true)
   clearError()
   resultsBody.innerHTML = ''
@@ -40,6 +42,7 @@ export async function doSearch(): Promise<void> {
 
   try {
     const response: SearchResponse = await window.api.searchTranslate(query)
+    if (searchId !== latestSearchId) return
 
     // Update syntax preview
     const syntaxInput = document.getElementById('syntax-input') as HTMLInputElement
@@ -57,9 +60,10 @@ export async function doSearch(): Promise<void> {
 
     statusResults.textContent = `${response.results.length} 条结果 (${(response.executionTimeMs / 1000).toFixed(1)}s)`
   } catch (err: unknown) {
+    if (searchId !== latestSearchId) return
     showError(`搜索失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
-    setLoading(false)
+    if (searchId === latestSearchId) setLoading(false)
   }
 }
 
@@ -73,8 +77,8 @@ function sortResults(results: SearchResult[], field: 'size' | 'date' | 'type' | 
     } else if (field === 'date') {
       cmp = new Date(a.dateModified).getTime() - new Date(b.dateModified).getTime()
     } else if (field === 'type') {
-      const aDir = a.attributes.includes('D') ? 1 : 0
-      const bDir = b.attributes.includes('D') ? 1 : 0
+      const aDir = isDirectory(a) ? 1 : 0
+      const bDir = isDirectory(b) ? 1 : 0
       cmp = aDir - bDir
     }
     return asc ? cmp : -cmp
@@ -108,7 +112,7 @@ function renderResults(results: SearchResult[]): void {
   resultsBody.innerHTML = ''
   const fragment = document.createDocumentFragment()
   for (const r of results) {
-    const isDir = r.attributes.includes('D')
+    const isDir = isDirectory(r)
     const tr = document.createElement('tr')
     tr.dataset.path = r.path
 
@@ -131,6 +135,14 @@ function renderResults(results: SearchResult[]): void {
     fragment.appendChild(tr)
   }
   resultsBody.appendChild(fragment)
+}
+
+function isDirectory(result: SearchResult): boolean {
+  const numericAttributes = Number(result.attributes)
+  if (Number.isFinite(numericAttributes)) {
+    return (numericAttributes & 16) !== 0
+  }
+  return result.attributes.includes('D') || result.path.endsWith('\\') || result.path.endsWith('/')
 }
 
 function showContextMenu(e: MouseEvent, filePath: string): void {

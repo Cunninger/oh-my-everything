@@ -1,5 +1,5 @@
 import type { AppSettings } from '../../shared/types'
-import { DEFAULT_SETTINGS } from '../../shared/constants'
+import { DEFAULT_SETTINGS, SEARCH_LIMITS } from '../../shared/constants'
 import { doSearch } from './search'
 
 const settingsOverlay = document.getElementById('settings-overlay')!
@@ -71,7 +71,7 @@ async function saveSettings(): Promise<void> {
       model: setModel.value,
     },
     esPath: setEspath.value,
-    maxResults: parseInt(setMaxresults.value, 10) || 100,
+    maxResults: clampMaxResults(setMaxresults.value),
     showSyntaxPreview: true,
     theme: setTheme.value as 'system' | 'light' | 'dark',
     excludePatterns: parseExcludePatterns(setExclude.value),
@@ -89,6 +89,12 @@ function parseExcludePatterns(value: string): string[] {
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
+}
+
+function clampMaxResults(value: string): number {
+  const numeric = parseInt(value, 10)
+  if (!Number.isFinite(numeric)) return DEFAULT_SETTINGS.maxResults
+  return Math.min(SEARCH_LIMITS.maxResults, Math.max(SEARCH_LIMITS.minResults, numeric))
 }
 
 // Exclude tag buttons

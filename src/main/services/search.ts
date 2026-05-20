@@ -4,12 +4,37 @@ import { join } from 'path'
 import { execSync } from 'child_process'
 import { StringDecoder } from 'string_decoder'
 import type { SearchResult } from '../../shared/types'
+import { hasDirectoryAttribute, parseCsvOutput } from './search-parser'
+import { SEARCH_LIMITS } from '../../shared/constants'
 
 export interface SearchOptions {
   syntax: string
   maxResults: number
   esPath: string
   excludePatterns?: string[]
+}
+
+export function cleanSearchSyntax(output: string): string {
+  let syntax = output.trim()
+  const fencedMatch = syntax.match(/^```(?:\w+)?\s*([\s\S]*?)\s*```$/)
+  if (fencedMatch) {
+    syntax = fencedMatch[1].trim()
+  }
+
+  const lines = syntax
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && !line.startsWith('```'))
+
+  syntax = lines.length > 1 ? lines[lines.length - 1] : (lines[0] || syntax)
+  syntax = syntax.replace(/^`+|`+$/g, '').trim()
+
+  const quote = syntax[0]
+  if ((quote === '"' || quote === "'") && syntax.endsWith(quote)) {
+    syntax = syntax.slice(1, -1).trim()
+  }
+
+  return syntax
 }
 
 export function normalizeSearchSyntax(syntax: string, now = new Date()): string {
@@ -160,13 +185,15 @@ export async function executeSearch(options: SearchOptions): Promise<SearchResul
   }
 
   const args = [
-    '-n', String(options.maxResults),
+    '-n', String(clampMaxResults(options.maxResults)),
     '-cp', '65001',
     '-csv',
+    '-name',
+    '-path-column',
     '-size',
     '-dm',
     '-dc',
-    '-a',
+    '-attributes',
     ...splitSearchSyntax(finalSyntax),
   ]
 
@@ -212,67 +239,13 @@ export async function executeSearch(options: SearchOptions): Promise<SearchResul
   })
 }
 
-function parseCsvOutput(csv: string): SearchResult[] {
-  const lines = csv.trim().split(/\r?\n/).filter(l => l.length > 0)
-  if (lines.length === 0) return []
-
-  // es.exe may output a header line starting with "Filename"
-  let startIdx = 0
-  if (lines[0].toLowerCase().startsWith('filename')) {
-    startIdx = 1
-  }
-
-  return lines.slice(startIdx).map(line => {
-    const parts = parseCsvLine(line)
-    const fullPath = parts[0] || line
-    const lastSep = Math.max(fullPath.lastIndexOf('\\'), fullPath.lastIndexOf('/'))
-    const filename = lastSep >= 0 ? fullPath.substring(lastSep + 1) : fullPath
-    const ext = filename.includes('.') ? filename.substring(filename.lastIndexOf('.') + 1) : ''
-    const size = parts[1] ? parseInt(parts[1], 10) : 0
-    const dateModified = parts[2] || ''
-    const dateCreated = parts[3] || ''
-    const attributes = parts[4] || ''
-
-    return { path: fullPath, filename, extension: ext, size, dateModified, dateCreated, attributes }
-  })
+function clampMaxResults(value: number): number {
+  if (!Number.isFinite(value)) return SEARCH_LIMITS.maxResults
+  return Math.min(SEARCH_LIMITS.maxResults, Math.max(SEARCH_LIMITS.minResults, Math.trunc(value)))
 }
 
 export function isFolder(result: SearchResult): boolean {
-  return result.attributes.includes('D')
-  })
-}
-
-function parseCsvLine(line: string): string[] {
-  const result: string[] = []
-  let current = ''
-  let inQuotes = false
-
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i]
-    if (inQuotes) {
-      if (ch === '"') {
-        if (i + 1 < line.length && line[i + 1] === '"') {
-          current += '"'
-          i++
-        } else {
-          inQuotes = false
-        }
-      } else {
-        current += ch
-      }
-    } else {
-      if (ch === '"') {
-        inQuotes = true
-      } else if (ch === ',') {
-        result.push(current)
-        current = ''
-      } else {
-        current += ch
-      }
-    }
-  }
-  result.push(current)
-  return result
+  return hasDirectoryAttribute(result.attributes)
 }
 
 function buildExcludeSyntax(patterns?: string[]): string {

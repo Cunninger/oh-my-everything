@@ -12,6 +12,12 @@ export const IPC_CHANNELS = {
   WINDOW_CLOSE: 'window:close',
 } as const
 
+export const SEARCH_LIMITS = {
+  minResults: 10,
+  maxResults: 1000,
+  maxQueryLength: 2000,
+} as const
+
 export const DEFAULT_SETTINGS: AppSettings = {
   ai: {
     provider: 'ollama',
