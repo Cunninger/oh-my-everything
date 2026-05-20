@@ -413,6 +413,30 @@ html, body {
   flex: 1;
 }
 
+.exclude-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.exclude-tag {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.exclude-tag.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
 .settings-actions {
   display: flex;
   gap: 12px;

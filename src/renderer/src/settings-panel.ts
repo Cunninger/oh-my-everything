@@ -50,6 +50,7 @@ async function loadSettings(): Promise<void> {
     setEspath.value = settings.esPath
     setMaxresults.value = String(settings.maxResults)
     setExclude.value = (settings.excludePatterns || []).join('\n')
+    syncExcludeTags()
     setTheme.value = settings.theme
   } catch {
     // Use defaults
@@ -87,6 +88,32 @@ function parseExcludePatterns(value: string): string[] {
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
 }
+
+// Exclude tag buttons
+document.querySelectorAll('.exclude-tag').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const value = btn.getAttribute('data-value')!
+    const lines = parseExcludePatterns(setExclude.value)
+    if (lines.includes(value)) {
+      setExclude.value = lines.filter((l) => l !== value).join('\n')
+      btn.classList.remove('active')
+    } else {
+      lines.push(value)
+      setExclude.value = lines.join('\n')
+      btn.classList.add('active')
+    }
+  })
+})
+
+function syncExcludeTags(): void {
+  const lines = parseExcludePatterns(setExclude.value)
+  document.querySelectorAll('.exclude-tag').forEach((btn) => {
+    const value = btn.getAttribute('data-value')!
+    btn.classList.toggle('active', lines.includes(value))
+  })
+}
+
+setExclude.addEventListener('input', syncExcludeTags)
 
 btnSettings.addEventListener('click', openSettings)
 btnCloseSettings.addEventListener('click', closeSettings)

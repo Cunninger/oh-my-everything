@@ -97,8 +97,20 @@
           <input type="number" id="set-maxresults" min="10" max="1000" value="100" />
         </div>
         <div class="setting-group">
-          <label>排除文件夹（每行一个）</label>
-          <textarea id="set-exclude" rows="5" placeholder="常用：node_modules, .git, target, dist, build, .cache&#10;每行一个"></textarea>
+          <label>排除文件夹</label>
+          <div class="exclude-tags">
+            <button class="exclude-tag" data-value="node_modules">node_modules</button>
+            <button class="exclude-tag" data-value=".git">.git</button>
+            <button class="exclude-tag" data-value="target">target</button>
+            <button class="exclude-tag" data-value="dist">dist</button>
+            <button class="exclude-tag" data-value="build">build</button>
+            <button class="exclude-tag" data-value=".cache">.cache</button>
+            <button class="exclude-tag" data-value=".next">.next</button>
+            <button class="exclude-tag" data-value=".temp">.temp</button>
+            <button class="exclude-tag" data-value=".idea">.idea</button>
+            <button class="exclude-tag" data-value=".vscode">.vscode</button>
+          </div>
+          <textarea id="set-exclude" rows="3" placeholder="自定义排除项，每行一个"></textarea>
         </div>
         <div class="setting-group">
           <label>主题</label>
