@@ -92,6 +92,21 @@ export function splitSearchSyntax(syntax: string): string[] {
 }
 
 export function findEsExe(userPath?: string): string | null {
+  // 0. Bundled es.exe shipped with the app
+  const bundledPaths: string[] = []
+  // Packaged app: extraResources lands under process.resourcesPath
+  if (process.resourcesPath) {
+    bundledPaths.push(join(process.resourcesPath, 'es', 'es.exe'))
+  }
+  // Development fallback: project root resources/es
+  try {
+    bundledPaths.push(join(__dirname, '../../../resources/es/es.exe'))
+  } catch { /* ignore */ }
+
+  for (const p of bundledPaths) {
+    if (existsSync(p)) return p
+  }
+
   // 1. User-configured path
   if (userPath && existsSync(userPath)) return userPath
 

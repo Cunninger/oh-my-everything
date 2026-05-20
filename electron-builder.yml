@@ -14,3 +14,8 @@ nsis:
   allowToChangeInstallationDirectory: true
 files:
   - out/**/*
+extraResources:
+  - from: resources/es
+    to: es
+    filter:
+      - "**/*"

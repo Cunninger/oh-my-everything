@@ -1,6 +1,10 @@
 # Oh My Everything
 
 <p align="center">
+  <img src="./resources/logo.svg" alt="Oh My Everything Logo" width="128" height="128">
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Electron-33.0-47848F?logo=electron&logoColor=white" alt="Electron">
   <img src="https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
   <img src="https://img.shields.io/badge/Vite-2.3-646CFF?logo=vite&logoColor=white" alt="Vite">
@@ -48,9 +52,8 @@
 ### 环境要求
 
 - Windows 10/11
-- [Node.js](https://nodejs.org/) ≥ 18
-- [Voidtools Everything](https://www.voidtools.com/) 已安装并运行
-- [es.exe](https://github.com/voidtools/ES/releases)（命令行工具，会自动检测或手动配置）
+- [Node.js](https://nodejs.org/) ≥ 18（开发/构建需要）
+- [Voidtools Everything](https://www.voidtools.com/) 已安装并运行（自带 `es.exe`，无需单独下载）
 
 ### 安装依赖
 
@@ -86,7 +89,7 @@ npm run package:portable
 | **API Key** | 对应服务的 API 密钥 | `sk-...` / 本地留空 |
 | **Base URL** | 自定义 API 地址（可选） | `http://localhost:11434` |
 | **模型** | 使用的模型名称 | `llama3.1` / `gpt-4o` |
-| **es.exe 路径** | Everything 命令行工具路径 | 自动检测 |
+| **es.exe 路径** | Everything 命令行工具路径（安装包已自带） | 自动检测 |
 | **最大结果数** | 单次搜索返回上限 | `100` |
 | **主题** | 界面主题模式 | `跟随系统` |
 
