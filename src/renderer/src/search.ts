@@ -14,7 +14,10 @@ let sortAsc = true
 export function setLoading(loading: boolean): void {
   resultsLoading.classList.toggle('hidden', !loading)
   searchBtn.disabled = loading
-  searchBtn.textContent = loading ? '搜索中...' : '搜索'
+  const label = searchBtn.querySelector('.btn-label') as HTMLSpanElement
+  const spinner = searchBtn.querySelector('.btn-spinner') as HTMLSpanElement
+  if (label) label.classList.toggle('hidden', loading)
+  if (spinner) spinner.classList.toggle('hidden', !loading)
 }
 
 export function showError(message: string): void {
