@@ -86,6 +86,7 @@ function updateSortIndicators(): void {
 }
 
 function renderResults(results: SearchResult[]): void {
+  resultsBody.innerHTML = ''
   const fragment = document.createDocumentFragment()
   for (const r of results) {
     const tr = document.createElement('tr')
