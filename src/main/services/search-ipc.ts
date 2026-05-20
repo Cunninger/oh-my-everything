@@ -46,6 +46,6 @@ function buildExcludeSyntax(patterns?: string[]): string {
   return patterns
     .map(p => p.trim())
     .filter(p => p.length > 0)
-    .map(p => `!path:*\\${p}\\*`)
+    .map(p => p.endsWith('\\') ? `!${p}` : `!${p}\\`)
     .join(' ')
 }
