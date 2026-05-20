@@ -254,6 +254,36 @@ html, body {
 .col-size { width: 12%; }
 .col-date { width: 18%; }
 
+#results-table th[data-sort] {
+  cursor: pointer;
+  user-select: none;
+}
+
+#results-table th[data-sort]::after {
+  content: '';
+  display: inline-block;
+  margin-left: 4px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  opacity: 0.3;
+  vertical-align: middle;
+  border-bottom: 5px solid currentColor;
+}
+
+#results-table th[data-sort].sort-asc::after {
+  opacity: 1;
+  border-bottom: 5px solid currentColor;
+  border-top: none;
+}
+
+#results-table th[data-sort].sort-desc::after {
+  opacity: 1;
+  border-top: 5px solid currentColor;
+  border-bottom: none;
+}
+
 #results-table td {
   padding: 4px 10px;
   border-bottom: 1px solid var(--border);

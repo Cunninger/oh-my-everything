@@ -1,4 +1,4 @@
-import type { SearchResponse } from '../../shared/types'
+import type { SearchResponse, SearchResult } from '../../shared/types'
 
 const searchInput = document.getElementById('search-input') as HTMLInputElement
 const searchBtn = document.getElementById('btn-search') as HTMLButtonElement
@@ -6,6 +6,10 @@ const statusResults = document.getElementById('status-results')!
 const resultsBody = document.getElementById('results-body')!
 const resultsEmpty = document.getElementById('results-empty')!
 const resultsLoading = document.getElementById('results-loading')!
+
+let currentResults: SearchResult[] = []
+let sortField: 'size' | 'date' | null = null
+let sortAsc = true
 
 export function setLoading(loading: boolean): void {
   resultsLoading.classList.toggle('hidden', !loading)
@@ -40,11 +44,12 @@ async function doSearch(): Promise<void> {
     document.getElementById('syntax-preview')!.classList.remove('hidden')
 
     // Update results
+    currentResults = response.results
     if (response.results.length === 0) {
       resultsEmpty.classList.remove('hidden')
     } else {
       resultsEmpty.classList.add('hidden')
-      renderResults(response.results)
+      renderResults(sortResults(currentResults, sortField, sortAsc))
     }
 
     statusResults.textContent = `${response.results.length} 条结果 (${(response.executionTimeMs / 1000).toFixed(1)}s)`
@@ -55,7 +60,32 @@ async function doSearch(): Promise<void> {
   }
 }
 
-function renderResults(results: import('../../shared/types').SearchResult[]): void {
+function sortResults(results: SearchResult[], field: 'size' | 'date' | null, asc: boolean): SearchResult[] {
+  if (!field) return results
+  const sorted = [...results]
+  sorted.sort((a, b) => {
+    let cmp = 0
+    if (field === 'size') {
+      cmp = a.size - b.size
+    } else if (field === 'date') {
+      cmp = new Date(a.dateModified).getTime() - new Date(b.dateModified).getTime()
+    }
+    return asc ? cmp : -cmp
+  })
+  return sorted
+}
+
+function updateSortIndicators(): void {
+  document.querySelectorAll('#results-table th[data-sort]').forEach((th) => {
+    th.classList.remove('sort-asc', 'sort-desc')
+    const f = th.getAttribute('data-sort') as 'size' | 'date'
+    if (f === sortField) {
+      th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc')
+    }
+  })
+}
+
+function renderResults(results: SearchResult[]): void {
   const fragment = document.createDocumentFragment()
   for (const r of results) {
     const tr = document.createElement('tr')
@@ -133,6 +163,21 @@ function formatSize(bytes: number): string {
 searchBtn.addEventListener('click', doSearch)
 searchInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') doSearch()
+})
+
+// Sort headers
+document.querySelectorAll('#results-table th[data-sort]').forEach((th) => {
+  th.addEventListener('click', () => {
+    const field = th.getAttribute('data-sort') as 'size' | 'date'
+    if (sortField === field) {
+      sortAsc = !sortAsc
+    } else {
+      sortField = field
+      sortAsc = true
+    }
+    updateSortIndicators()
+    renderResults(sortResults(currentResults, sortField, sortAsc))
+  })
 })
 
 // Focus search input on load
