@@ -374,10 +374,10 @@ html, body {
 }
 
 .setting-group input,
-.setting-group select {
+.setting-group select,
+.setting-group textarea {
   width: 100%;
-  height: 32px;
-  padding: 0 8px;
+  padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 3px;
   background: var(--bg-primary);
@@ -386,8 +386,21 @@ html, body {
   outline: none;
 }
 
+.setting-group input,
+.setting-group select {
+  height: 32px;
+  padding: 0 8px;
+}
+
+.setting-group textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: "Cascadia Code", "Consolas", monospace;
+}
+
 .setting-group input:focus,
-.setting-group select:focus {
+.setting-group select:focus,
+.setting-group textarea:focus {
   border-color: var(--accent);
 }
 

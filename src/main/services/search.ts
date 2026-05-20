@@ -9,6 +9,7 @@ export interface SearchOptions {
   syntax: string
   maxResults: number
   esPath: string
+  excludePatterns?: string[]
 }
 
 export function normalizeSearchSyntax(syntax: string, now = new Date()): string {
@@ -147,6 +148,8 @@ export function findEsExe(userPath?: string): string | null {
 
 export async function executeSearch(options: SearchOptions): Promise<SearchResult[]> {
   const syntax = normalizeSearchSyntax(options.syntax)
+  const excludeSuffix = buildExcludeSyntax(options.excludePatterns)
+  const finalSyntax = excludeSuffix ? `${syntax} ${excludeSuffix}` : syntax
   const esPath = options.esPath || findEsExe() || ''
   if (!esPath) {
     throw new Error('未找到 es.exe，请从 https://github.com/voidtools/ES/releases 下载 es.exe 并在设置中配置路径')
@@ -163,7 +166,7 @@ export async function executeSearch(options: SearchOptions): Promise<SearchResul
     '-size',
     '-dm',
     '-dc',
-    ...splitSearchSyntax(syntax),
+    ...splitSearchSyntax(finalSyntax),
   ]
 
   return new Promise((resolve, reject) => {
@@ -263,4 +266,13 @@ function parseCsvLine(line: string): string[] {
   }
   result.push(current)
   return result
+}
+
+function buildExcludeSyntax(patterns?: string[]): string {
+  if (!patterns || patterns.length === 0) return ''
+  return patterns
+    .map(p => p.trim())
+    .filter(p => p.length > 0)
+    .map(p => `!path:*\\${p}\\*`)
+    .join(' ')
 }

@@ -12,6 +12,7 @@ const setBaseurl = document.getElementById('set-baseurl') as HTMLInputElement
 const setModel = document.getElementById('set-model') as HTMLInputElement
 const setEspath = document.getElementById('set-espath') as HTMLInputElement
 const setMaxresults = document.getElementById('set-maxresults') as HTMLInputElement
+const setExclude = document.getElementById('set-exclude') as HTMLTextAreaElement
 const setTheme = document.getElementById('set-theme') as HTMLSelectElement
 
 export function initTheme(): void {
@@ -48,6 +49,7 @@ async function loadSettings(): Promise<void> {
     setModel.value = settings.ai.model
     setEspath.value = settings.esPath
     setMaxresults.value = String(settings.maxResults)
+    setExclude.value = (settings.excludePatterns || []).join('\n')
     setTheme.value = settings.theme
   } catch {
     // Use defaults
@@ -70,12 +72,20 @@ async function saveSettings(): Promise<void> {
     maxResults: parseInt(setMaxresults.value, 10) || 100,
     showSyntaxPreview: true,
     theme: setTheme.value as 'system' | 'light' | 'dark',
+    excludePatterns: parseExcludePatterns(setExclude.value),
   }
 
   await window.api.setSettings(settings)
   applyTheme(settings.theme)
   localStorage.setItem('theme', settings.theme)
   closeSettings()
+}
+
+function parseExcludePatterns(value: string): string[] {
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
 }
 
 btnSettings.addEventListener('click', openSettings)

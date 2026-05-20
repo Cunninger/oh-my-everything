@@ -28,4 +28,5 @@ export interface AppSettings {
   maxResults: number
   showSyntaxPreview: boolean
   theme: 'system' | 'light' | 'dark'
+  excludePatterns: string[]
 }
