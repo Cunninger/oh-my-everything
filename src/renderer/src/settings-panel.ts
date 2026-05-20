@@ -1,5 +1,6 @@
 import type { AppSettings } from '../../shared/types'
 import { DEFAULT_SETTINGS } from '../../shared/constants'
+import { doSearch } from './search'
 
 const settingsOverlay = document.getElementById('settings-overlay')!
 const btnSettings = document.getElementById('btn-settings')!
@@ -80,6 +81,7 @@ async function saveSettings(): Promise<void> {
   applyTheme(settings.theme)
   localStorage.setItem('theme', settings.theme)
   closeSettings()
+  doSearch()
 }
 
 function parseExcludePatterns(value: string): string[] {

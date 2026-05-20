@@ -5,6 +5,7 @@ export interface SearchResult {
   size: number
   dateModified: string
   dateCreated: string
+  attributes: string
 }
 
 export interface SearchResponse {

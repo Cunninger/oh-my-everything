@@ -379,6 +379,24 @@ html, body {
 .col-size { width: 12%; }
 .col-date { width: 18%; }
 
+.col-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  transition: color var(--transition-base);
+}
+
+#results-table tr:hover .file-icon {
+  color: var(--accent);
+}
+
 #results-table th[data-sort] {
   cursor: pointer;
   user-select: none;

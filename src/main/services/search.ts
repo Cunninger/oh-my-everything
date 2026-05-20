@@ -166,6 +166,7 @@ export async function executeSearch(options: SearchOptions): Promise<SearchResul
     '-size',
     '-dm',
     '-dc',
+    '-a',
     ...splitSearchSyntax(finalSyntax),
   ]
 
@@ -230,8 +231,14 @@ function parseCsvOutput(csv: string): SearchResult[] {
     const size = parts[1] ? parseInt(parts[1], 10) : 0
     const dateModified = parts[2] || ''
     const dateCreated = parts[3] || ''
+    const attributes = parts[4] || ''
 
-    return { path: fullPath, filename, extension: ext, size, dateModified, dateCreated }
+    return { path: fullPath, filename, extension: ext, size, dateModified, dateCreated, attributes }
+  })
+}
+
+export function isFolder(result: SearchResult): boolean {
+  return result.attributes.includes('D')
   })
 }
 

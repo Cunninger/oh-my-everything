@@ -8,7 +8,7 @@ const resultsEmpty = document.getElementById('results-empty')!
 const resultsLoading = document.getElementById('results-loading')!
 
 let currentResults: SearchResult[] = []
-let sortField: 'size' | 'date' | null = null
+let sortField: 'size' | 'date' | 'type' | null = null
 let sortAsc = true
 
 export function setLoading(loading: boolean): void {
@@ -29,7 +29,7 @@ export function clearError(): void {
   statusResults.classList.remove('error-message')
 }
 
-async function doSearch(): Promise<void> {
+export async function doSearch(): Promise<void> {
   const query = searchInput.value.trim()
   if (!query) return
 
@@ -63,7 +63,7 @@ async function doSearch(): Promise<void> {
   }
 }
 
-function sortResults(results: SearchResult[], field: 'size' | 'date' | null, asc: boolean): SearchResult[] {
+function sortResults(results: SearchResult[], field: 'size' | 'date' | 'type' | null, asc: boolean): SearchResult[] {
   if (!field) return results
   const sorted = [...results]
   sorted.sort((a, b) => {
@@ -72,6 +72,10 @@ function sortResults(results: SearchResult[], field: 'size' | 'date' | null, asc
       cmp = a.size - b.size
     } else if (field === 'date') {
       cmp = new Date(a.dateModified).getTime() - new Date(b.dateModified).getTime()
+    } else if (field === 'type') {
+      const aDir = a.attributes.includes('D') ? 1 : 0
+      const bDir = b.attributes.includes('D') ? 1 : 0
+      cmp = aDir - bDir
     }
     return asc ? cmp : -cmp
   })
@@ -81,24 +85,37 @@ function sortResults(results: SearchResult[], field: 'size' | 'date' | null, asc
 function updateSortIndicators(): void {
   document.querySelectorAll('#results-table th[data-sort]').forEach((th) => {
     th.classList.remove('sort-asc', 'sort-desc')
-    const f = th.getAttribute('data-sort') as 'size' | 'date'
+    const f = th.getAttribute('data-sort') as 'size' | 'date' | 'type'
     if (f === sortField) {
       th.classList.add(sortAsc ? 'sort-asc' : 'sort-desc')
     }
   })
 }
 
+function fileIcon(isDir: boolean): string {
+  if (isDir) {
+    return `<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>`
+  }
+  return `<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+    <polyline points="14 2 14 8 20 8"/>
+  </svg>`
+}
+
 function renderResults(results: SearchResult[]): void {
   resultsBody.innerHTML = ''
   const fragment = document.createDocumentFragment()
   for (const r of results) {
+    const isDir = r.attributes.includes('D')
     const tr = document.createElement('tr')
     tr.dataset.path = r.path
 
     tr.innerHTML = `
-      <td title="${escapeHtml(r.filename)}">${escapeHtml(r.filename)}</td>
+      <td title="${escapeHtml(r.filename)}" class="col-name-cell">${fileIcon(isDir)}<span class="filename-text">${escapeHtml(r.filename)}</span></td>
       <td title="${escapeHtml(r.path)}">${escapeHtml(r.path)}</td>
-      <td>${formatSize(r.size)}</td>
+      <td>${isDir ? '--' : formatSize(r.size)}</td>
       <td>${r.dateModified}</td>
     `
 
@@ -172,7 +189,7 @@ searchInput.addEventListener('keydown', (e) => {
 // Sort headers
 document.querySelectorAll('#results-table th[data-sort]').forEach((th) => {
   th.addEventListener('click', () => {
-    const field = th.getAttribute('data-sort') as 'size' | 'date'
+    const field = th.getAttribute('data-sort') as 'size' | 'date' | 'type'
     if (sortField === field) {
       sortAsc = !sortAsc
     } else {
