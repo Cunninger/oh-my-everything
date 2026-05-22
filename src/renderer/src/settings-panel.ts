@@ -15,6 +15,7 @@ const setBaseurl = document.getElementById('set-baseurl') as HTMLInputElement
 const setModel = document.getElementById('set-model') as HTMLInputElement
 const setEspath = document.getElementById('set-espath') as HTMLInputElement
 const setMaxresults = document.getElementById('set-maxresults') as HTMLInputElement
+const setShortcut = document.getElementById('set-shortcut') as HTMLInputElement
 const setExclude = document.getElementById('set-exclude') as HTMLTextAreaElement
 const setTheme = document.getElementById('set-theme') as HTMLSelectElement
 const setUpdateAutocheck = document.getElementById('set-update-autocheck') as HTMLInputElement
@@ -43,7 +44,7 @@ function applyTheme(theme: string): void {
   }
 }
 
-function openSettings(): void {
+export function openSettings(): void {
   settingsOverlay.classList.remove('hidden')
   loadSettings()
 }
@@ -61,6 +62,7 @@ async function loadSettings(): Promise<void> {
     setModel.value = settings.ai.model
     setEspath.value = settings.esPath
     setMaxresults.value = String(settings.maxResults)
+    setShortcut.value = settings.globalShortcut
     setExclude.value = (settings.excludePatterns || []).join('\n')
     syncExcludeTags()
     setTheme.value = settings.theme
@@ -75,6 +77,7 @@ async function loadSettings(): Promise<void> {
     setProvider.value = DEFAULT_SETTINGS.ai.provider
     setModel.value = DEFAULT_SETTINGS.ai.model
     setMaxresults.value = String(DEFAULT_SETTINGS.maxResults)
+    setShortcut.value = DEFAULT_SETTINGS.globalShortcut
     setTheme.value = DEFAULT_SETTINGS.theme
     setUpdateAutocheck.checked = DEFAULT_SETTINGS.updates.autoCheckOnStartup
     setUpdateProxyEnabled.checked = DEFAULT_SETTINGS.updates.proxyEnabled
@@ -102,6 +105,8 @@ async function saveSettings(): Promise<void> {
       proxyTemplate: setUpdateProxyTemplate.value.trim() || DEFAULT_SETTINGS.updates.proxyTemplate,
       preferInstaller: setUpdatePreferInstaller.checked,
     },
+    onboardingCompleted: true,
+    globalShortcut: setShortcut.value.trim() || DEFAULT_SETTINGS.globalShortcut,
   }
 
   await window.api.setSettings(settings)

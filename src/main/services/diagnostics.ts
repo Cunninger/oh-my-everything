@@ -3,6 +3,7 @@ import type { DiagnosticInfo } from '../../shared/types'
 import { getSettings } from './settings'
 import { findEsExe } from './search'
 import { getLogsPath } from './logger'
+import { getRecentEvents } from './observability'
 
 export function getDiagnostics(): DiagnosticInfo {
   const settings = getSettings()
@@ -27,6 +28,7 @@ export function getDiagnostics(): DiagnosticInfo {
       excludePatternCount: settings.excludePatterns.length,
       updates: settings.updates,
     },
+    recentEvents: getRecentEvents(),
   }
 }
 
@@ -46,5 +48,11 @@ export function formatDiagnostics(info = getDiagnostics()): string {
     `Theme: ${info.settings.theme}`,
     `Exclude patterns: ${info.settings.excludePatternCount}`,
     `Updates: auto=${info.settings.updates.autoCheckOnStartup}, proxy=${info.settings.updates.proxyEnabled}, preferInstaller=${info.settings.updates.preferInstaller}`,
+    '',
+    'Recent events:',
+    ...info.recentEvents.slice(0, 10).map(event => {
+      const meta = event.meta ? ` ${JSON.stringify(event.meta)}` : ''
+      return `- ${event.time} [${event.level}/${event.category}] ${event.message}${meta}`
+    }),
   ].join('\n')
 }

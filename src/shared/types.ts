@@ -14,6 +14,9 @@ export interface SearchResponse {
   results: SearchResult[]
   totalResults: number
   executionTimeMs: number
+  translatedBy: 'ai' | 'fallback'
+  explanation: string
+  warning?: string
 }
 
 export interface AIProviderConfig {
@@ -38,6 +41,8 @@ export interface AppSettings {
   theme: 'system' | 'light' | 'dark'
   excludePatterns: string[]
   updates: UpdateSettings
+  onboardingCompleted: boolean
+  globalShortcut: string
 }
 
 export interface UpdateAsset {
@@ -63,12 +68,21 @@ export interface UpdateDownloadResult {
   filePath: string
   fileName: string
   size: number
+  sha256: string
 }
 
 export interface UpdateDownloadProgress {
   receivedBytes: number
   totalBytes: number
   percent: number
+}
+
+export interface RuntimeEvent {
+  time: string
+  level: 'info' | 'warn' | 'error'
+  category: 'app' | 'search' | 'ai' | 'update' | 'security'
+  message: string
+  meta?: Record<string, unknown>
 }
 
 export interface DiagnosticInfo {
@@ -91,6 +105,7 @@ export interface DiagnosticInfo {
     excludePatternCount: number
     updates: UpdateSettings
   }
+  recentEvents: RuntimeEvent[]
 }
 
 export interface ExposedAPI {
@@ -108,6 +123,8 @@ export interface ExposedAPI {
   checkForUpdates(): Promise<UpdateCheckResult>
   downloadUpdate(): Promise<UpdateDownloadResult>
   openDownloadedInstaller(filePath?: string): Promise<void>
+  markOnboardingCompleted(): Promise<void>
+  toggleWindow(): Promise<void>
   onUpdateProgress(callback: (progress: UpdateDownloadProgress) => void): () => void
   onUpdateAvailable(callback: (update: UpdateCheckResult) => void): () => void
   onUpdateError(callback: (message: string) => void): () => void

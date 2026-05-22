@@ -18,12 +18,12 @@ const release: GitHubRelease = {
   published_at: '2026-05-20T00:00:00Z',
   assets: [
     {
-      name: 'oh-my-everything.0.1.3.exe',
+      name: 'oh-my-everything-0.1.3-win-x64-portable.exe',
       size: 100,
       browser_download_url: 'https://github.com/Cunninger/oh-my-everything/releases/download/v0.1.3/oh-my-everything.0.1.3.exe',
     },
     {
-      name: 'oh-my-everything.Setup.0.1.3.exe',
+      name: 'oh-my-everything-0.1.3-win-x64-nsis.exe',
       size: 200,
       browser_download_url: 'https://github.com/Cunninger/oh-my-everything/releases/download/v0.1.3/oh-my-everything.Setup.0.1.3.exe',
     },
@@ -38,8 +38,8 @@ describe('update core', () => {
   })
 
   it('selects installer first when preferred and portable first otherwise', () => {
-    assert.equal(selectReleaseAsset(release, true)?.name, 'oh-my-everything.Setup.0.1.3.exe')
-    assert.equal(selectReleaseAsset(release, false)?.name, 'oh-my-everything.0.1.3.exe')
+    assert.equal(selectReleaseAsset(release, true)?.name, 'oh-my-everything-0.1.3-win-x64-nsis.exe')
+    assert.equal(selectReleaseAsset(release, false)?.name, 'oh-my-everything-0.1.3-win-x64-portable.exe')
   })
 
   it('rewrites download URLs through proxy templates', () => {

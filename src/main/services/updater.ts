@@ -1,6 +1,7 @@
 import { app, BrowserWindow, shell } from 'electron'
-import { createWriteStream, existsSync, mkdirSync } from 'fs'
+import { createReadStream, createWriteStream, existsSync, mkdirSync } from 'fs'
 import { dirname, join } from 'path'
+import { createHash } from 'crypto'
 import { pipeline } from 'stream/promises'
 import { Readable } from 'stream'
 import { APP_REPOSITORY, IPC_CHANNELS } from '../../shared/constants'
@@ -8,6 +9,8 @@ import type { UpdateCheckResult, UpdateDownloadProgress, UpdateDownloadResult } 
 import { getSettings } from './settings'
 import { logError, logInfo, logWarn } from './logger'
 import { toUpdateCheckResult, type GitHubRelease } from './update-core'
+import { fetchWithTimeout } from './net'
+import { recordEvent } from './observability'
 
 let lastCheck: UpdateCheckResult | null = null
 let lastDownload: UpdateDownloadResult | null = null
@@ -18,20 +21,24 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
 
   let response: Response
   try {
-    response = await fetch(APP_REPOSITORY.latestReleaseApi, {
+    response = await fetchWithTimeout(APP_REPOSITORY.latestReleaseApi, {
       headers: {
         'Accept': 'application/vnd.github+json',
         'User-Agent': `oh-my-everything/${app.getVersion()}`,
       },
-    })
+    }, 12000)
   } catch (err) {
     logError('Update check network failure', err)
+    recordEvent('error', 'update', 'Update check network failure', {
+      message: err instanceof Error ? err.message : String(err),
+    })
     throw new Error(`检查更新失败: ${err instanceof Error ? err.message : String(err)}`)
   }
 
   if (!response.ok) {
     const text = await response.text()
     logWarn('Update check failed', { status: response.status, body: text.slice(0, 300) })
+    recordEvent('warn', 'update', 'Update check failed', { status: response.status })
     throw new Error(`检查更新失败 (${response.status}): ${text.slice(0, 200)}`)
   }
 
@@ -42,6 +49,11 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
     latestVersion: result.latestVersion,
     hasUpdate: result.hasUpdate,
     asset: result.asset?.name,
+  })
+  recordEvent('info', 'update', 'Update check completed', {
+    latestVersion: result.latestVersion,
+    hasUpdate: result.hasUpdate,
+    asset: result.asset?.name || '',
   })
   return result
 }
@@ -61,15 +73,23 @@ export async function downloadUpdate(
 
   let response: Response
   try {
-    response = await fetch(downloadUrl)
+    response = await fetchWithTimeout(downloadUrl, {}, 10 * 60 * 1000)
   } catch (err) {
     logError('Update download network failure', err)
+    recordEvent('error', 'update', 'Update download network failure', {
+      fileName: update.asset.name,
+      message: err instanceof Error ? err.message : String(err),
+    })
     throw new Error(`下载更新失败: ${err instanceof Error ? err.message : String(err)}。可在设置中关闭代理后重试。`)
   }
 
   if (!response.ok || !response.body) {
     const text = await response.text().catch(() => '')
     logWarn('Update download failed', { status: response.status, body: text.slice(0, 300) })
+    recordEvent('warn', 'update', 'Update download failed', {
+      fileName: update.asset.name,
+      status: response.status,
+    })
     throw new Error(`下载更新失败 (${response.status})。可在设置中关闭代理后重试。`)
   }
 
@@ -91,8 +111,18 @@ export async function downloadUpdate(
     createWriteStream(filePath)
   )
 
-  lastDownload = { filePath, fileName: update.asset.name, size: receivedBytes || update.asset.size }
+  lastDownload = {
+    filePath,
+    fileName: update.asset.name,
+    size: receivedBytes || update.asset.size,
+    sha256: await sha256File(filePath),
+  }
   logInfo('Update download completed', lastDownload)
+  recordEvent('info', 'update', 'Update download completed', {
+    fileName: lastDownload.fileName,
+    size: lastDownload.size,
+    sha256: lastDownload.sha256,
+  })
   return lastDownload
 }
 
@@ -102,6 +132,12 @@ export async function openDownloadedInstaller(filePath?: string): Promise<void> 
   const result = await shell.openPath(target)
   if (result) throw new Error(result)
   logInfo('Opened downloaded installer', { filePath: target })
+}
+
+async function sha256File(filePath: string): Promise<string> {
+  const hash = createHash('sha256')
+  await pipeline(createReadStream(filePath), hash)
+  return hash.digest('hex')
 }
 
 export function scheduleStartupUpdateCheck(win: BrowserWindow): void {

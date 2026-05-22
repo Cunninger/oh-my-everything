@@ -92,7 +92,7 @@ async function downloadUpdate(): Promise<void> {
   updateStatus.textContent = '正在下载更新...'
   try {
     downloadedUpdate = await window.api.downloadUpdate()
-    updateStatus.textContent = `下载完成：${downloadedUpdate.fileName}`
+    updateStatus.textContent = `下载完成：${downloadedUpdate.fileName} · SHA256 ${downloadedUpdate.sha256.slice(0, 12)}...`
     btnOpenInstaller.classList.remove('hidden')
   } catch (err) {
     updateStatus.textContent = '下载更新失败'

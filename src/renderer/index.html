@@ -42,11 +42,29 @@
           <span class="btn-spinner hidden"></span>
         </button>
       </div>
+      <div id="quick-searches" class="quick-searches" aria-label="常用搜索">
+        <button class="quick-chip" data-query="今天修改的文档">今天文档</button>
+        <button class="quick-chip" data-query="最近 7 天修改的代码文件">近 7 天代码</button>
+        <button class="quick-chip" data-query="超过 100MB 的大文件">大文件</button>
+        <button class="quick-chip" data-query="D 盘里的 PDF 文件">D 盘 PDF</button>
+      </div>
+      <div id="search-memory" class="search-memory hidden">
+        <div class="memory-section hidden" id="favorites-section">
+          <span class="memory-label">收藏</span>
+          <div id="favorites-list" class="memory-list"></div>
+        </div>
+        <div class="memory-section hidden" id="history-section">
+          <span class="memory-label">历史</span>
+          <div id="history-list" class="memory-list"></div>
+        </div>
+      </div>
       <div id="syntax-preview" class="syntax-preview hidden">
         <label>Everything 语法：</label>
         <input type="text" id="syntax-input" />
         <button id="btn-rerun" class="btn-small">重新搜索</button>
+        <button id="btn-favorite-search" class="btn-small" title="收藏当前搜索">收藏</button>
       </div>
+      <div id="search-explanation" class="search-explanation hidden"></div>
     </div>
 
     <!-- Results area -->
@@ -112,6 +130,10 @@
         <div class="setting-group">
           <label>最大结果数</label>
           <input type="number" id="set-maxresults" min="10" max="1000" value="100" />
+        </div>
+        <div class="setting-group">
+          <label>全局快捷键</label>
+          <input type="text" id="set-shortcut" placeholder="Ctrl+Alt+Space" />
         </div>
         <div class="setting-group">
           <label>排除文件夹</label>
@@ -196,6 +218,29 @@
         <div class="settings-actions">
           <button id="btn-copy-dialog" class="btn-small hidden">复制详情</button>
           <button id="btn-close-dialog" class="btn-primary">关闭</button>
+        </div>
+      </div>
+    </div>
+    <div id="onboarding-overlay" class="hidden">
+      <div id="onboarding-panel">
+        <h2>开始使用 oh-my-everything</h2>
+        <div class="onboarding-grid">
+          <div class="onboarding-item">
+            <strong id="onboarding-es">检测 Everything...</strong>
+            <span>用于执行本地高速文件搜索。</span>
+          </div>
+          <div class="onboarding-item">
+            <strong id="onboarding-ai">检测 AI 配置...</strong>
+            <span>AI 不可用时会自动使用本地规则搜索。</span>
+          </div>
+          <div class="onboarding-item">
+            <strong>Ctrl+Alt+Space</strong>
+            <span>可从任意位置快速显示或隐藏窗口。</span>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button id="btn-onboarding-settings" class="btn-small">打开设置</button>
+          <button id="btn-onboarding-done" class="btn-primary">开始搜索</button>
         </div>
       </div>
     </div>

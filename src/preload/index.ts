@@ -54,6 +54,12 @@ const api: ExposedAPI = {
   openDownloadedInstaller: (filePath?: string): Promise<void> =>
     ipcRenderer.invoke(IPC_CHANNELS.UPDATE_OPEN_INSTALLER, filePath),
 
+  markOnboardingCompleted: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_ONBOARDING_COMPLETE),
+
+  toggleWindow: (): Promise<void> =>
+    ipcRenderer.invoke(IPC_CHANNELS.WINDOW_TOGGLE),
+
   onUpdateProgress: (callback: (progress: UpdateDownloadProgress) => void): (() => void) => {
     const listener = (_event: Electron.IpcRendererEvent, progress: UpdateDownloadProgress): void => callback(progress)
     ipcRenderer.on(IPC_CHANNELS.UPDATE_PROGRESS, listener)

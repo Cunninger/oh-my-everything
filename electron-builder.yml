@@ -2,6 +2,7 @@ appId: com.oh-my-everything.app
 productName: oh-my-everything
 directories:
   buildResources: resources
+asar: true
 win:
   target:
     - target: nsis
@@ -9,12 +10,24 @@ win:
     - target: portable
       arch: [x64]
   icon: resources/icon.ico
+  requestedExecutionLevel: asInvoker
 nsis:
+  artifactName: "${productName}-${version}-${os}-${arch}-nsis.${ext}"
   oneClick: false
   allowToChangeInstallationDirectory: true
+  perMachine: false
+  deleteAppDataOnUninstall: false
+portable:
+  artifactName: "${productName}-${version}-${os}-${arch}-portable.${ext}"
 files:
   - out/**/*
+publish:
+  provider: github
+  owner: Cunninger
+  repo: oh-my-everything
 extraResources:
+  - from: resources/icon.ico
+    to: icon.ico
   - from: resources/es
     to: es
     filter:

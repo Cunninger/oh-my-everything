@@ -5,6 +5,7 @@ import './dialog'
 import './settings-panel'
 import { initTheme } from './settings-panel'
 import { initUpdates, setDisplayedVersion } from './updates'
+import { initOnboarding } from './onboarding'
 
 declare global {
   interface Window {
@@ -24,6 +25,7 @@ document.getElementById('btn-close')?.addEventListener('click', () => {
 // Initialize theme
 initTheme()
 initUpdates()
+initOnboarding()
 
 window.api.getDiagnostics()
   .then((diagnostics) => setDisplayedVersion(diagnostics.info.appVersion))

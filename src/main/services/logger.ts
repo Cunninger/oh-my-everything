@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { appendFileSync, existsSync, mkdirSync, readdirSync, renameSync, statSync, unlinkSync } from 'fs'
 import { join } from 'path'
+import { recordEvent } from './observability'
 
 const MAX_LOG_BYTES = 1024 * 1024
 const MAX_ARCHIVES = 3
@@ -36,6 +37,7 @@ function writeLog(level: 'info' | 'warn' | 'error', message: string, meta?: unkn
       ...(meta === undefined ? {} : { meta: sanitizeMeta(meta) }),
     }
     appendFileSync(file, `${JSON.stringify(entry)}\n`, 'utf-8')
+    recordEvent(level, 'app', message, isRecord(meta) ? sanitizeMeta(meta) as Record<string, unknown> : undefined)
   } catch {
     // Logging must never break app behavior.
   }
@@ -78,6 +80,10 @@ function sanitizeMeta(meta: unknown): unknown {
     if (/apikey|api_key|authorization|token|password/i.test(key)) return '[redacted]'
     return value
   }))
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
 function formatTimestamp(date: Date): string {

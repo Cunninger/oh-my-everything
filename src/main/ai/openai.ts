@@ -1,6 +1,8 @@
 import type { AIProviderConfig } from '../../shared/types'
 import type { AIProvider } from './provider'
 import { SYSTEM_PROMPT } from '../system-prompt'
+import { AppNetworkError, fetchWithTimeout, normalizeProviderError } from '../services/net'
+import { parseOpenAIResponse } from './openai-response'
 
 export class OpenAIProvider implements AIProvider {
   private config: AIProviderConfig
@@ -10,7 +12,15 @@ export class OpenAIProvider implements AIProvider {
   }
 
   async translateToEverythingSyntax(query: string): Promise<string> {
-    const baseUrl = this.config.baseUrl || 'https://api.openai.com'
+    try {
+      return await this.translate(query)
+    } catch (err) {
+      throw normalizeProviderError('OpenAI', err)
+    }
+  }
+
+  private async translate(query: string): Promise<string> {
+    const baseUrl = (this.config.baseUrl || 'https://api.openai.com').replace(/\/+$/, '')
     const url = `${baseUrl}/v1/chat/completions`
 
     const headers: Record<string, string> = {
@@ -30,44 +40,14 @@ export class OpenAIProvider implements AIProvider {
       max_tokens: 8192,
     })
 
-    let response: Response
-    try {
-      response = await fetch(url, { method: 'POST', headers, body })
-    } catch (err) {
-      console.error('[AI] fetch failed:', err)
-      throw new Error(`网络请求失败: ${err instanceof Error ? err.message : String(err)}`)
-    }
+    const response = await fetchWithTimeout(url, { method: 'POST', headers, body }, 25000)
 
     const rawText = await response.text()
 
     if (!response.ok) {
-      throw new Error(`API 错误 (${response.status}): ${rawText.slice(0, 300)}`)
+      throw new AppNetworkError(`API 错误 (${response.status}): ${rawText.slice(0, 300)}`, 'http', response.status)
     }
 
-    let data: any
-    try {
-      data = JSON.parse(rawText)
-    } catch {
-      throw new Error(`API 返回非 JSON: ${rawText.slice(0, 300)}`)
-    }
-
-    // Check for API-level errors even with 200 status
-    if (data.error) {
-      throw new Error(`API 错误: ${JSON.stringify(data.error)}`)
-    }
-
-    const msg = data.choices?.[0]?.message
-    const content =
-      msg?.content?.trim() ||
-      msg?.reasoning_content?.trim() ||
-      data.output?.trim() ||
-      data.content?.trim() ||
-      data.response?.trim()
-
-    if (!content) {
-      throw new Error(`返回空结果，原始响应: ${rawText.slice(0, 500)}`)
-    }
-
-    return content
+    return parseOpenAIResponse(rawText)
   }
 }

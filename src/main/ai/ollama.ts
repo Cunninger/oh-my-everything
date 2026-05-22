@@ -1,6 +1,7 @@
 import type { AIProviderConfig } from '../../shared/types'
 import type { AIProvider } from './provider'
 import { SYSTEM_PROMPT } from '../system-prompt'
+import { AppNetworkError, fetchWithTimeout, normalizeProviderError } from '../services/net'
 
 export class OllamaProvider implements AIProvider {
   private config: AIProviderConfig
@@ -10,7 +11,15 @@ export class OllamaProvider implements AIProvider {
   }
 
   async translateToEverythingSyntax(query: string): Promise<string> {
-    const baseUrl = this.config.baseUrl || 'http://localhost:11434'
+    try {
+      return await this.translate(query)
+    } catch (err) {
+      throw normalizeProviderError('Ollama', err)
+    }
+  }
+
+  private async translate(query: string): Promise<string> {
+    const baseUrl = (this.config.baseUrl || 'http://localhost:11434').replace(/\/+$/, '')
     const url = `${baseUrl}/api/chat`
 
     const headers: Record<string, string> = {
@@ -20,7 +29,7 @@ export class OllamaProvider implements AIProvider {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`
     }
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -31,16 +40,16 @@ export class OllamaProvider implements AIProvider {
         ],
         stream: false,
       }),
-    })
+    }, 25000)
 
     if (!response.ok) {
       const text = await response.text()
-      throw new Error(`Ollama API 错误 (${response.status}): ${text}`)
+      throw new AppNetworkError(`API 错误 (${response.status}): ${text.slice(0, 300)}`, 'http', response.status)
     }
 
-    const data = await response.json()
+    const data = await response.json() as any
     const content = data.message?.content?.trim()
-    if (!content) throw new Error('Ollama 返回空结果')
+    if (!content) throw new AppNetworkError('返回空结果', 'empty')
 
     return content
   }

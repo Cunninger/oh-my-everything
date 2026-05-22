@@ -39,8 +39,9 @@ export function isNewerVersion(candidate: string, current: string): boolean {
 
 export function selectReleaseAsset(release: GitHubRelease, preferInstaller: boolean): GitHubReleaseAsset | null {
   const executableAssets = release.assets.filter(asset => /\.exe$/i.test(asset.name))
-  const installer = executableAssets.find(asset => /setup/i.test(asset.name))
-  const portable = executableAssets.find(asset => !/setup/i.test(asset.name))
+  const installer = executableAssets.find(asset => /setup|nsis|installer/i.test(asset.name))
+  const portable = executableAssets.find(asset => /portable/i.test(asset.name)) ||
+    executableAssets.find(asset => !/setup|nsis|installer/i.test(asset.name))
   return preferInstaller ? (installer || portable || null) : (portable || installer || null)
 }
 
@@ -72,7 +73,7 @@ export function toUpdateCheckResult(
         size: selectedAsset.size,
         url: selectedAsset.browser_download_url,
         proxiedUrl: rewriteDownloadUrl(selectedAsset.browser_download_url, settings),
-        kind: /setup/i.test(selectedAsset.name) ? 'installer' : 'portable',
+        kind: /setup|nsis|installer/i.test(selectedAsset.name) ? 'installer' : 'portable',
       }
     : null
 

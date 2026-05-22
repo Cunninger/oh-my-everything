@@ -19,8 +19,10 @@ export const IPC_CHANNELS = {
   UPDATE_PROGRESS: 'app:update:progress',
   UPDATE_AVAILABLE: 'app:update:available',
   UPDATE_ERROR: 'app:update:error',
+  SETTINGS_ONBOARDING_COMPLETE: 'settings:onboardingComplete',
   WINDOW_MINIMIZE: 'window:minimize',
   WINDOW_CLOSE: 'window:close',
+  WINDOW_TOGGLE: 'window:toggle',
 } as const
 
 export const SEARCH_LIMITS = {
@@ -54,4 +56,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   excludePatterns: [],
   updates: { ...DEFAULT_UPDATE_SETTINGS },
+  onboardingCompleted: false,
+  globalShortcut: 'Ctrl+Alt+Space',
 }

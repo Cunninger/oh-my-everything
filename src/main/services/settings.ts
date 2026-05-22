@@ -21,6 +21,8 @@ interface StoredSettings {
   theme?: unknown
   excludePatterns?: unknown
   updates?: unknown
+  onboardingCompleted?: unknown
+  globalShortcut?: unknown
 }
 
 function getConfigPath(): string {
@@ -67,6 +69,11 @@ export function getExportableSettings(): AppSettings {
   }
 }
 
+export function markOnboardingCompleted(): void {
+  const settings = getSettings()
+  setSettings({ ...settings, onboardingCompleted: true })
+}
+
 function normalizeSettings(value?: unknown): AppSettings {
   const settings = isRecord(value) ? value as StoredSettings : {}
   const ai = isRecord(settings.ai) ? settings.ai : {}
@@ -88,6 +95,10 @@ function normalizeSettings(value?: unknown): AppSettings {
     theme,
     excludePatterns: normalizeExcludePatterns(settings?.excludePatterns),
     updates: normalizeUpdateSettings(settings?.updates),
+    onboardingCompleted: typeof settings?.onboardingCompleted === 'boolean'
+      ? settings.onboardingCompleted
+      : DEFAULT_SETTINGS.onboardingCompleted,
+    globalShortcut: normalizeOptionalString(settings?.globalShortcut) || DEFAULT_SETTINGS.globalShortcut,
   }
 }
 
